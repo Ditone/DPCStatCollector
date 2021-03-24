@@ -34,10 +34,22 @@ from SupportingScripts.PlayerInfo import PlayerInfo
 
 
 def main():
-    recorder1 = MatchRetriever()
+    recorder = MatchRetriever()
+    testing_matches = [5849513507, 5861478139, 5861662720]
+    match_list = []
+    status = 0
+
     recorder2 = MatchRetriever()
-    recorder1.clear_player_list()
-    recorder2.print_player_list()
+    print()
+    print()
+    for x in range(2):
+        print()
+        print()
+        print("Repeat " + str(x+1))
+        recorder.update_multiple_player_list(testing_matches)
+        recorder2.print_player_list()
+        print()
+        print()
 
 
 if __name__ == "__main__":

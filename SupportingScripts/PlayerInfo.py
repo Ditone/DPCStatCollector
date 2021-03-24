@@ -34,4 +34,6 @@ class PlayerInfo:
         return self.team
 
     def get_pings(self):
-        return self.team
+        return self.pings
+
+

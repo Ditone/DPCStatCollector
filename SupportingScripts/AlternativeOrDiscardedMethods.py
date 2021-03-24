@@ -92,3 +92,14 @@ def get_specific_match(match_id: int):
         print("Something went wrong with the request: ", io_err)
 
     return request_test
+
+# Garbage code
+# for existing_player in self.player_list:
+#   # check if the name exists, if it does, update
+#  if player['name'] == existing_player.get_name():
+#     # update here
+
+#    # sets the tracker to true, so that it doesn't run the block below
+#   player_found = True
+
+# this will only run if the previous for loop didn't exit / find a match
