@@ -18,16 +18,26 @@
 # Domain Name: https://quinreidy.me
 # OPENDOTA API KEY
 # 3ca47c01-644c-48fc-b81c-ca2032313edc
+#
+# First stage of development will be to pull the # of pings by each pro player
+#   1. One match    2. Several matches (different players)  3. Several matches (some same players)
+#   4. Whole NA Region  5. Each individual region   6. Group by teams   7. Overview
 
+# get_und_4z_url = "https://api.opendota.com/api/matches/5849513507?api_key=3ca47c01-644c-48fc-b81c-ca2032313edc"
+# get_qc_eg_url = "https://api.opendota.com/api/matches/5861478139?api_key=3ca47c01-644c-48fc-b81c-ca2032313edc"
+# get_sad_at_url = "https://api.opendota.com/api/matches/5861662720?api_key=3ca47c01-644c-48fc-b81c-ca2032313edc"
 
-from SupportingScripts import getInfoFromMatchID
-import requests
-import json
+# Testing IDs : 5849513507, 5861478139, 5861662720
+
+from SupportingScripts.MatchRetriever import MatchRetriever
+from SupportingScripts.PlayerInfo import PlayerInfo
 
 
 def main():
-    match_id = 1
-    print("https://api.opendota.com/api/matches/" + str(match_id) + "?api_key=3ca47c01-644c-48fc-b81c-ca2032313edc")
+    recorder1 = MatchRetriever()
+    recorder2 = MatchRetriever()
+    recorder1.clear_player_list()
+    recorder2.print_player_list()
 
 
 if __name__ == "__main__":
