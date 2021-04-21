@@ -2,6 +2,8 @@
 # No analysis here, just the retrieval and storage
 # 'DPC Winter 21 League (NA) presented by BTS' : ID 12735
 
+# Going to focus results on DPC S2 - all matches from April 12 - May 23
+
 import requests
 import json
 from SupportingScripts.PlayerInfo import PlayerInfo
@@ -98,41 +100,99 @@ class MatchRetriever:
             for player in self.player_list:
                 print(player)
 
+    def write_player_list(self):
+        if self.player_list is None:
+            print("player_list doesn't exist.")
+            exit(666)
+
+        elif len(self.player_list) == 0:
+            print("player_list is empty.")
+            exit(666)
+
+        else:
+            try:
+                count = 0
+                # open the file
+                print("Opening output file.")
+                output = open("SupportingScripts/output.txt", 'w')
+
+                # clear the file
+                print("Clearing output file.")
+                output.write('')
+
+                # add players
+                print("Adding players.")
+                for player in self.player_list:
+                    output.write(player + '\n')
+                    count += 1
+
+                # completed
+                print("Successfully added " + str(count) + " players.\nComplete.")
+
+            except FileNotFoundError:
+                print("File doesn't exist. Creating the file: ")
+                open("SupportingScripts/match_output", "x")
+                self.write_player_list()
+
     # Input: JSON of Match Details
     # Output: Number of updated entries, updated global player list specifically for pings
-    def update_player_list_ping(self, result_set):
+    def update_player_list(self, result_set):
         print("Updating with Match Id: " + str(result_set['match_id']) + "...")
         # tracker for number of updated entries
         num_updated = 0
+
         # update player if they exists
         # else, append global list with new player with info
         for player in result_set['players']:
-            if self.player_in_list(str(player['name'])):
-                print(str(player['name']) + " already exists in the list. Updating ping value.")
-                working_player = self.find_player_in_list(player['name'])
-                working_player.update_pings(player['pings'])
-                print(str(player['name']) + " updated to have " + str(working_player.get_pings()))
-                num_updated += 1
 
+            # make sure pings isn't none, if it is, set pings to 0
+            try:
+                if player['pings'] is not None:
+                    player_pings = player['pings']
+                else:
+                    player_pings = 0
+            except KeyError:
+                player_pings = 0
+
+            # if the player exists
+            if self.player_in_list(str(player['name'])):
+                # print(str(player['name']) + " already exists in the list. Updating values.")
+                # find the player
+                working_player = self.find_player_in_list(player['name'])
+
+                # update number of pings
+                working_player.update_pings(player_pings)
+
+                # update number of matches played
+                working_player.update_matches()
+
+                # update amount of time in match (seconds)
+                working_player.update_match_time(result_set['duration'])
+
+                # show result
+                # print(str(player['name']) + " updated to have " + str(working_player.get_pings()))
+                num_updated += 1
+            # player doesn't exist
             else:
-                print(str(player['name']) + " not found. \n"
-                                            "Player Adding new player with attributes: " + str(
-                    player['name']) + ", " + str(player['pings']))
+                # print(str(player['name']) + " not found. \n"
+                #                           "Player Adding new player with attributes: " + str(
+                #  player['name']) + ", " + str(pings))
                 if player['isRadiant']:
-                    self.player_list.append(PlayerInfo(name=str(player['name']),
-                                                       name_id=int(player['account_id']),
+                    # Add player if they're radiant
+                    self.player_list.append(PlayerInfo(name=str(player['name']), name_id=int(player['account_id']),
                                                        team=str(result_set['radiant_team']['name']),
-                                                       pings=int(player['pings'])))
+                                                       pings=int(player_pings),
+                                                       match_time=int(result_set['duration'])))
                     num_updated += 1
 
                 else:
-                    self.player_list.append(PlayerInfo(name=str(player['name']),
-                                                       name_id=int(player['account_id']),
+                    # Add player if they're dire
+                    self.player_list.append(PlayerInfo(name=str(player['name']), name_id=int(player['account_id']),
                                                        team=str(result_set['dire_team']['name']),
-                                                       pings=int(player['pings'])))
+                                                       pings=int(player_pings),
+                                                       match_time=int(result_set['duration'])))
                     num_updated += 1
-
-        # returns number of updated entries, should be 10
+        # returns number of updated entries, expected to be 10
         return num_updated
 
     # Input: Any number of match IDs
@@ -146,7 +206,7 @@ class MatchRetriever:
 
         for match_id in match_list:
             # calls update_player_list after getting the result set from the get_specific_match call for each argument
-            status = status + self.update_player_list_ping(self.get_specific_match(match_id))
+            status = status + self.update_player_list(self.get_specific_match(match_id))
             # each call to update_player_list should return 10
             # thus if status%10 isn't 0, then somewhere there was an issue updating
             if status % 10 != 0:
@@ -156,6 +216,9 @@ class MatchRetriever:
 
         print(str(len(match_list)) + " matches have been entered.")
 
+    # Input: Official Player Name
+    # Output: Boolean
+    # Use: Returns true if the player exists in the list
     def player_in_list(self, player_name: str) -> bool:
         for player in self.player_list:
             if player_name == player.get_name():
@@ -163,6 +226,9 @@ class MatchRetriever:
 
         return False
 
+    # Input: Official Player Name
+    # Output: PlayerInfo Object
+    # Use: Returns PlayerInfo if the player exists in the list
     def find_player_in_list(self, player_name: str) -> PlayerInfo:
         if self.player_in_list(player_name):
             for player in self.player_list:
@@ -171,3 +237,20 @@ class MatchRetriever:
         else:
             print("Player is not in the list.")
             exit(666)
+
+    # Input:
+    # Output: Copy of player_list
+    # Use: For outside use of retrieving the player_info list without directly modifying it
+    def get_players(self):
+        if len(self.player_list) == 0:
+            print("Player list is empty.")
+            exit(666)
+
+        return_list = self.player_list.clone()
+        return return_list
+
+    # Input: Match ID
+    # Output: Match Details relevant for the application
+    # Use: Debugging. Try and find errors in the data retrieval / logic errors
+    def relevant_match_info(self, match_id : int):
+        return match_id
